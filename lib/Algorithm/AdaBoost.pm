@@ -5,7 +5,6 @@ use warnings;
 use Algorithm::AdaBoost::Classifier qw(POSITIVE NEGATIVE NOT_APPLICABLE);
 use Carp ();
 use Exporter::Lite;
-use List::Util ();
 
 our @EXPORT_OK = @Algorithm::AdaBoost::Classifier::EXPORT_OK;
 
@@ -81,16 +80,25 @@ sub classify {
 
 sub score {
     my ($self, $data) = @_;
-    return List::Util::reduce {
-        $a + $b->weight * $b->classify($data)
-    } 0, @{ $self->{classifiers} };
+    $self->score_explain($data)->score;
 }
 
 sub explain {
     my ($self, $data) = @_;
-    return +{ map {
-        ($_->EXPLAIN || $_->name ) => $_->weight * $_->classify($data)
-    } @{ $self->{classifiers} } };
+    $self->score_explain($data)->explain;
+}
+
+sub score_explain {
+    my ($self, $data) = @_;
+    my $ret = {
+        score   => 0,
+        explain => {},
+    };
+    for (@{ $self->{classifiers} }) {
+        $ret->{score} += (my $score = $_->weight * $_->classify($data));
+        $ret->{explain}->{$_->EXPLAIN || $_->name} = $score;
+    }
+    return Algorithm::AdaBoost::Result->new(%$ret);
 }
 
 sub load {
@@ -133,6 +141,18 @@ sub status {
     } @{ $self->{classifiers} }),
     sprintf "Similarity: %1.4f", (grep { $_->{label} eq $self->classify($_->{data}) } @{ $self->{data} }) / @{ $self->{data} };
 }
+
+
+package
+    Algorithm::AdaBoost::Result;
+
+use Class::Accessor::Lite
+    new => 1,
+    ro => [qw( score explain )];
+
+
+package
+    Algorithm::AdaBoost;
 
 
 1;

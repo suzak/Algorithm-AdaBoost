@@ -3,7 +3,6 @@ use strict;
 use warnings;
 
 use Exporter::Lite;
-use List::Util ();
 
 use Class::Accessor::Lite
     rw => [qw(weight division_pos minimum_error)],
@@ -56,7 +55,8 @@ sub minimize_error {
         my @misclassified = grep {
             $_->{classified} != NOT_APPLICABLE && $_->{label} != $_->{classified}
         } @$data;
-        my $error = List::Util::reduce { $a + $b->{weight}->{$self->name} } 0, @misclassified;
+        my $error = 0;
+        $error += $_->{weight}->{$self->name} for @misclassified;
         if ($error < $minimum_error) {
             $minimum_error = $error;
             $best_division_pos = $division_pos;
