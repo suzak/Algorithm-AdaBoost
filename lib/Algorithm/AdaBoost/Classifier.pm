@@ -75,8 +75,8 @@ sub minimize_error {
         $next ? next : last;
     }
 
-    $self->division_pos($best_division_pos);
-    return $self->minimum_error($minimum_error);
+    $self->{division_pos} = $best_division_pos;
+    return $self->{minimum_error} = $minimum_error;
 }
 
 

@@ -40,15 +40,15 @@ sub train {
     for (my $i = 0; $i < @{ $self->{classifiers} }; ++$i) {
         my $c = $self->{classifiers}->[$i];
         my $error = $c->minimize_error($self->{data});
-        $c->weight($error == 1 ? 0 :
-                   $error == 0 ? 10 : 0.5 * log((1 - $error) / $error));
+        $c->{weight} = $error == 1 ? 0 :
+                       $error == 0 ? 10 : 0.5 * log((1 - $error) / $error));
         return if $i >= @{ $self->{classifiers} } - 1;
 
         my $normalization_factor = $error ? 2 * sqrt($error * (1 - $error)) : 1;
         my $next = $self->{classifiers}->[$i + 1]->name;
         for (@{ $self->{data} }) {
             if (defined(my $score = $_->{score}->{$c->name})) {
-                $_->{weight}->{$next} = $_->{weight}->{$c->name} * exp(- $c->weight * $score) / $normalization_factor;
+                $_->{weight}->{$next} = $_->{weight}->{$c->name} * exp(- $c->{weight} * $score) / $normalization_factor;
             } else {
                 $_->{weight}->{$next} = $_->{weight}->{$c->name};
             }
