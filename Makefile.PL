@@ -5,7 +5,6 @@ all_from 'lib/Algorithm/AdaBoost.pm';
 requires 'Carp';
 requires 'Class::Accessor::Lite';
 requires 'Exporter::Lite';
-requires 'List::Util';
 
 tests 't/*.t';
 author_tests 'xt';
