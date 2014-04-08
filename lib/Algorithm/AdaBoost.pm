@@ -91,14 +91,16 @@ sub explain {
 sub score_explain {
     my ($self, $data) = @_;
     my $ret = {
+        norm    => 0,
         score   => 0,
         explain => {},
     };
     for (@{ $self->{classifiers} }) {
+        $ret->{norm} += $_->weight;
         $ret->{score} += (my $score = $_->weight * $_->classify($data));
         $ret->{explain}->{$_->EXPLAIN || $_->name} = $score;
     }
-    return Algorithm::AdaBoost::Result->new(%$ret);
+    return Algorithm::AdaBoost::Result->new(%$ret, norm => $ret->{norm} || 1);
 }
 
 sub load {
@@ -148,8 +150,12 @@ package
 
 use Class::Accessor::Lite
     new => 1,
-    ro => [qw( score explain )];
+    ro => [qw( norm score explain )];
 
+sub normalized_score {
+    my $self = shift;
+    return $self->score / $self->norm;
+}
 
 package
     Algorithm::AdaBoost;
